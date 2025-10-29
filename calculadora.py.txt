@@ -1,0 +1,59 @@
+# calculadora_console.py
+# Uso: python calculadora_console.py
+
+import math
+
+def mostrar_menu():
+    print("\n=== Calculadora simples ===")
+    print("Operações: +  -  *  /  ** (potência)")
+    print("Funções: sqrt, sin, cos, tan, log, log10")
+    print("Comandos: help, history, quit")
+    print("Exemplos: 2 + 2    sqrt 16    sin 0.5")
+
+history = []
+
+def calcular(expressao):
+    # limitar o namespace para segurança
+    allowed_names = {
+        k: getattr(math, k) for k in ("sqrt","sin","cos","tan","log","log10","pi","e")
+    }
+    # adicionar operadores e builtins seguros
+    allowed_names.update({"abs": abs, "round": round})
+    try:
+        # tenta avaliar expressões como "2 + 3*4" ou "sqrt(16)"
+        resultado = eval(expressao, {"__builtins__": None}, allowed_names)
+        history.append((expressao, resultado))
+        return resultado
+    except ZeroDivisionError:
+        return "Erro: divisão por zero"
+    except Exception as e:
+        return f"Erro: expressão inválida ({e})"
+
+def main():
+    mostrar_menu()
+    while True:
+        s = input("\n> ").strip()
+        if not s:
+            continue
+        if s.lower() in ("quit","exit"):
+            print("Tchau!")
+            break
+        if s.lower() == "help":
+            mostrar_menu()
+            continue
+        if s.lower() == "history":
+            if not history:
+                print("Sem histórico.")
+            else:
+                for i,(expr,res) in enumerate(history,1):
+                    print(f"{i}: {expr} = {res}")
+            continue
+        # se começar com função única como "sqrt 9" converte para "sqrt(9)"
+        if " " in s and "(" not in s and any(s.startswith(f) for f in ("sqrt","sin","cos","tan","log","log10")):
+            parts = s.split(maxsplit=1)
+            s = f"{parts[0]}({parts[1]})"
+        resultado = calcular(s)
+        print(resultado)
+
+if __name__ == "__main__":
+    main()
